@@ -5,7 +5,11 @@ import org.apache.dubbo.config.annotation.Service;
 import org.hyperic.sigar.*;
 
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.net.InetAddress;
+import java.util.StringTokenizer;
 
 /**
  * @Author: Joylice
@@ -15,6 +19,7 @@ import java.net.InetAddress;
 public class MonitorService {
 
     public static void main(String[] args) throws Exception {
+
         //获取本地Ip
         System.out.println("主机IP " + InetAddress.getLocalHost().getHostAddress());
         //获取CPU状态
@@ -86,4 +91,5 @@ public class MonitorService {
         // 当前内存剩余量
         System.out.println("当前内存剩余量:    " + mem.getFree() / 1024L + "K free");
     }
+
 }
