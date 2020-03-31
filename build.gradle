@@ -19,12 +19,16 @@ dependencies {
     //implementation files('lib/sigar-1.6.4.jar')
     implementation fileTree(dir:'lib',include:['*.jar'])
     implementation 'org.springframework.boot:spring-boot-starter-web-services'
+    
+    // https://mvnrepository.com/artifact/com.alibaba/dubbo
+    compile group: 'com.alibaba', name: 'dubbo', version: '2.6.5'
+    compile 'org.apache.zookeeper:zookeeper:3.4.11'
 
-    // https://mvnrepository.com/artifact/org.apache.dubbo/dubbo-spring-boot-starter
-    implementation group: 'org.apache.dubbo', name: 'dubbo-spring-boot-starter', version: '2.7.5'
-
+    compile 'com.101tec:zkclient:0.10'
 //    // https://mvnrepository.com/artifact/org.hyperic/sigar
 //    compile group: 'org.hyperic', name: 'sigar', version: '1.6.4'
+// https://mvnrepository.com/artifact/org.projectlombok/lombok
+   // implementation group: 'org.projectlombok', name: 'lombok', version: '1.18.10'
 
     implementation 'org.projectlombok:lombok:1.18.2'
 
