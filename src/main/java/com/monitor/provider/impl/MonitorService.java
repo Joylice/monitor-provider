@@ -1,10 +1,16 @@
-package com.monitor.api.services;
+package com.monitor.provider.impl;
 
 
-import org.apache.dubbo.config.annotation.Service;
+import com.alibaba.dubbo.config.annotation.Service;
+import com.dubbo.common.api.MonitorServiceInterface;
+import com.dubbo.common.entity.FileSystemProperties;
+import com.dubbo.common.entity.ServerProperties;
 import org.hyperic.sigar.*;
 
+
 import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @Author: Joylice
@@ -20,14 +26,17 @@ public class MonitorService implements MonitorServiceInterface {
             ServerProperties cpu;
             ServerProperties net;
             ServerProperties memory;
+            List<FileSystemProperties> fileSystemProperties;
             cpu = cpu();
             net = net();
             memory = memory();
+            fileSystemProperties = file();
             serverProperties.setHost(InetAddress.getLocalHost().getHostAddress());
             serverProperties.setUserCpu(cpu.getUserCpu());
             serverProperties.setCombinedCpu(cpu.getCombinedCpu());
             serverProperties.setRxBytesCounts(net.getRxBytesCounts());
             serverProperties.setTxBytesCounts(net.getTxBytesCounts());
+            serverProperties.setFileSystems(fileSystemProperties);
             serverProperties.setUsedMem(memory.getUsedMem());
             serverProperties.setFreeMem(memory.getFreeMem());
         } catch (Exception ex) {
@@ -52,6 +61,7 @@ public class MonitorService implements MonitorServiceInterface {
         serverProperties.setCombinedCpu(CpuPerc.format(combinedCpu / cpuInfo.length));
         return serverProperties;
     }
+
 
     private ServerProperties net() throws Exception {
 
@@ -90,5 +100,23 @@ public class MonitorService implements MonitorServiceInterface {
         serverProperties.setUsedMem(CpuPerc.format(usedMem));
         serverProperties.setFreeMem(CpuPerc.format(1 - usedMem));
         return serverProperties;
+    }
+
+    private static List<FileSystemProperties> file() throws SigarException {
+        Sigar sigar = new Sigar();
+        List<FileSystemProperties> fileSystems = new ArrayList<>();
+        FileSystem fileSystem[] = sigar.getFileSystemList();
+        for (int i = 0; i < fileSystem.length; i++) {
+            FileSystem fs = fileSystem[i];
+            FileSystemUsage usage = null;
+            usage = sigar.getFileSystemUsage(fs.getDirName());
+            FileSystemProperties fileSystemProperties = new FileSystemProperties();
+            fileSystemProperties.setDevName(fs.getDevName());
+            fileSystemProperties.setDevTotalCounts(usage.getTotal());
+            fileSystemProperties.setDevFreeCounts(usage.getFree());
+            fileSystemProperties.setDevUsedCounts(usage.getUsed());
+            fileSystems.add(fileSystemProperties);
+        }
+        return fileSystems;
     }
 }

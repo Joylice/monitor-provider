@@ -16,27 +16,25 @@ repositories {
 
 dependencies {
 
-    //implementation files('lib/sigar-1.6.4.jar')
-    implementation fileTree(dir:'lib',include:['*.jar'])
-    implementation 'org.springframework.boot:spring-boot-starter-web-services'
-    
-    // https://mvnrepository.com/artifact/com.alibaba/dubbo
+    implementation files('lib/sigar-1.6.4.jar')
+    implementation files('lib/com.dubbo.common.jar')
+    //implementation fileTree(dir:'lib',include:['*.jar'])
+    implementation ('org.springframework.boot:spring-boot-starter-web-services')
+
     compile group: 'com.alibaba', name: 'dubbo', version: '2.6.5'
-    compile 'org.apache.zookeeper:zookeeper:3.4.11'
+    compile ('org.apache.zookeeper:zookeeper:3.4.11')
 
     compile 'com.101tec:zkclient:0.10'
-//    // https://mvnrepository.com/artifact/org.hyperic/sigar
-//    compile group: 'org.hyperic', name: 'sigar', version: '1.6.4'
-// https://mvnrepository.com/artifact/org.projectlombok/lombok
-   // implementation group: 'org.projectlombok', name: 'lombok', version: '1.18.10'
 
-    implementation 'org.projectlombok:lombok:1.18.2'
+   // compile group: 'org.hyperic', name: 'sigar', version: '1.6.4'
+    
+    implementation 'com.alibaba.spring:spring-context-support:1.0.6'
+    implementation 'org.apache.curator:curator-recipes:2.13.0'
 
-    testImplementation('org.springframework.boot:spring-boot-starter-test') {
-        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
-    }
+    implementation 'ch.qos.logback:logback-classic:1.2.3'
+
+
+
 }
 
-test {
-    useJUnitPlatform()
-}
+
