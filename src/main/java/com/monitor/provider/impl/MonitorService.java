@@ -4,20 +4,35 @@ package com.monitor.provider.impl;
 import com.alibaba.dubbo.config.annotation.Service;
 import com.dubbo.common.api.MonitorServiceInterface;
 import com.dubbo.common.entity.FileSystemProperties;
+import com.dubbo.common.entity.HardwareProperties;
 import com.dubbo.common.entity.ServerProperties;
 import org.hyperic.sigar.*;
+import org.springframework.beans.factory.annotation.Value;
 
 
-import java.net.InetAddress;
+import java.net.*;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 
 /**
  * @Author: Joylice
  * @Date: 2020/3/27 17:24
  */
-@Service
+@Service(version = "${demo.service.version}", interfaceClass = MonitorServiceInterface.class)
 public class MonitorService implements MonitorServiceInterface {
+
+    @Value("${host.model}")
+    private String model;
+    @Value("${host.cpu.mode}")
+    private String cpuModel;
+    @Value("${host.cpu.Ghz}")
+    private String cpuGhz;
+    @Value("${host.mem.count}")
+    private String memCounts;
+    @Value("${host.fileSystem.count}")
+    private String fileCounts;
+
 
     @Override
     public ServerProperties getPCState() {
@@ -27,11 +42,17 @@ public class MonitorService implements MonitorServiceInterface {
             ServerProperties net;
             ServerProperties memory;
             List<FileSystemProperties> fileSystemProperties;
+            String os = System.getProperty("os.name");
             cpu = cpu();
             net = net();
             memory = memory();
             fileSystemProperties = file();
-            serverProperties.setHost(InetAddress.getLocalHost().getHostAddress());
+            if (os.toLowerCase().startsWith("win")) {
+                serverProperties.setHost(InetAddress.getLocalHost().getHostAddress());
+            } else {
+                String ip = getLocalLinuxIP();
+                serverProperties.setHost(ip);
+            }
             serverProperties.setUserCpu(cpu.getUserCpu());
             serverProperties.setCombinedCpu(cpu.getCombinedCpu());
             serverProperties.setRxBytesCounts(net.getRxBytesCounts());
@@ -43,6 +64,34 @@ public class MonitorService implements MonitorServiceInterface {
             ex.printStackTrace();
         }
         return serverProperties;
+    }
+
+    @Override
+    public HardwareProperties getHardwarePro() {
+        try {
+            return getHardValues();
+        } catch (Exception e) {
+            return new HardwareProperties();
+        }
+    }
+
+    private HardwareProperties getHardValues() throws SigarException, UnknownHostException {
+        HardwareProperties hardwareProperties = new HardwareProperties();
+        Sigar sigar = new Sigar();
+        String os = System.getProperty("os.name");
+        if (os.toLowerCase().startsWith("win")) {
+            hardwareProperties.setHost(InetAddress.getLocalHost().getHostAddress());
+        } else {
+            hardwareProperties.setHost(getLocalLinuxIP());
+        }
+        hardwareProperties.setModel(model);
+        CpuInfo[] cpuInfo = sigar.getCpuInfoList();
+        hardwareProperties.setCpuCounts(cpuInfo.length + "");
+        hardwareProperties.setCpuModel(cpuModel);
+        hardwareProperties.setCpuGHz(cpuGhz);
+        hardwareProperties.setMemCounts(memCounts);
+        hardwareProperties.setFileCounts(fileCounts);
+        return hardwareProperties;
     }
 
     private ServerProperties cpu() throws SigarException {
@@ -102,7 +151,7 @@ public class MonitorService implements MonitorServiceInterface {
         return serverProperties;
     }
 
-    private static List<FileSystemProperties> file() throws SigarException {
+    private List<FileSystemProperties> file() throws SigarException {
         Sigar sigar = new Sigar();
         List<FileSystemProperties> fileSystems = new ArrayList<>();
         FileSystem fileSystem[] = sigar.getFileSystemList();
@@ -119,4 +168,32 @@ public class MonitorService implements MonitorServiceInterface {
         }
         return fileSystems;
     }
+
+    private String getLocalLinuxIP() {
+        List<String> ipList = new ArrayList<String>();
+        try {
+            Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
+            NetworkInterface networkInterface;
+            Enumeration<InetAddress> inetAddresses;
+            InetAddress inetAddress;
+            String ip;
+            while (networkInterfaces.hasMoreElements()) {
+                networkInterface = networkInterfaces.nextElement();
+                if (!networkInterface.getName().startsWith("eth0")) continue;
+                inetAddresses = networkInterface.getInetAddresses();
+                while (inetAddresses.hasMoreElements()) {
+                    inetAddress = inetAddresses.nextElement();
+                    if (inetAddress != null && inetAddress instanceof Inet4Address) { // IPV4
+                        ip = inetAddress.getHostAddress();
+                        return ip;
+                    }
+                }
+            }
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
+
+
 }
